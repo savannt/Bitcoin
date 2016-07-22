@@ -1,4 +1,4 @@
-package me.savant.bitcoin;
+package me.savant.bitcoin.ui;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;

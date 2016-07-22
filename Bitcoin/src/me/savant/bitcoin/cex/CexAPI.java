@@ -20,7 +20,7 @@
  * Account Balance, Place Order, Cancel Order, Open Order
  */
 
-package me.savant.bitcoin;
+package me.savant.bitcoin.cex;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;

@@ -7,6 +7,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
 
+import me.savant.bitcoin.cex.CexAPI;
+import me.savant.bitcoin.ui.UIManager;
+
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
@@ -63,10 +66,11 @@ public class BTCStats
 
 		
 		System.out.println("[BTCPrice - USD] CoinDesk Price: " + price + " Yesterday's CoinDesk Price: " + yesterdaysPrice + " CoinDesk Difference: " + difference + " CEX.io Price: " + cex_price + " btcvol.info Volatility: " + volatility);
+		manager.getWindow().printToConsole("[BTCPrice - USD] CoinDesk Price: " + price + " Yesterday's CoinDesk Price: " + yesterdaysPrice + " CoinDesk Difference: " + difference + " CEX.io Price: " + cex_price + " btcvol.info Volatility: " + volatility);
 		
 		try
 		{
-			Thread.sleep(5000);
+			Thread.sleep(20000);
 		}
 		catch (InterruptedException e)
 		{

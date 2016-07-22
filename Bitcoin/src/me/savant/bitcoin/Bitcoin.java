@@ -1,5 +1,8 @@
 package me.savant.bitcoin;
 
+import me.savant.bitcoin.cex.CexAPI;
+import me.savant.bitcoin.ui.UIManager;
+
 public class Bitcoin
 {
 	/**
@@ -8,6 +11,8 @@ public class Bitcoin
 	 * Buying - Buy Low
 	 * Selling - Sell High
 	 * 
+	 * ask - sell
+	 * bid - buy
 	 */
 	
 	static BTCStats price;
@@ -15,8 +20,8 @@ public class Bitcoin
 	
 	public static void main(String[] args)
 	{
-		UIManager manager = new UIManager();
 		cex = new CexAPI("", "", "");
+		UIManager manager = new UIManager(cex);
 		price = new BTCStats(manager, cex);
 	}
 	

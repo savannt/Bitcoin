@@ -1,14 +1,16 @@
-package me.savant.bitcoin;
+package me.savant.bitcoin.ui;
+
+import me.savant.bitcoin.cex.CexAPI;
 
 public class UIManager
 {
 	boolean isLoading = true;
 	Loading loading;
 	Window window;
-	public UIManager()
+	public UIManager(CexAPI cex)
 	{
 		loading = new Loading();
-		window = new Window();
+		window = new Window(cex);
 	}
 	
 	public boolean isLoading()

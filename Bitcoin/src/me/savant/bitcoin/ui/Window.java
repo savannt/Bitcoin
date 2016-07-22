@@ -1,25 +1,54 @@
-package me.savant.bitcoin;
+package me.savant.bitcoin.ui;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
-import javax.swing.SwingConstants;
+import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.JButton;
+import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.table.DefaultTableModel;
+
+import me.savant.bitcoin.Bitcoin;
+import me.savant.bitcoin.cex.CexAPI;
+import me.savant.bitcoin.cex.History;
+import me.savant.bitcoin.cex.HistoryIndex;
 
 public class Window
 {
 	private JFrame frame;
-
-	public Window()
+	
+	private History history;
+	
+	public Window(CexAPI cex)
 	{
 		initialize();
+		history = new History(cex);
+		populateHistory();
+		printToConsole("Started!");
+	}
+	
+	public void printToConsole(String text)
+	{
+		DefaultListModel listModel = (DefaultListModel) consoleList.getModel();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+		listModel.addElement("[" + sdf.format(new Date()) + "] " + text);
+		consoleList.setModel(listModel);
 	}
 	
 	public void setVisible(boolean value)
@@ -36,6 +65,10 @@ public class Window
 	private JTextField name;
 	private JTextField api_key;
 	private JTextField api_secret;
+	private JList consoleList;
+	private JTable historyTable;
+	private JSlider amount;
+	
 	
 	public void updatePrice(float price, float priceYesterday, String difference, float cex_price, float volatility)
 	{
@@ -58,6 +91,26 @@ public class Window
 
 		frame.revalidate();
 		frame.repaint();
+	}
+	
+	private void populateHistory()
+	{
+		historyTable.setModel(new DefaultTableModel(history.amount, 4));
+		DefaultTableModel model = (DefaultTableModel) historyTable.getModel();
+		List<HistoryIndex> list = history.fetchHistory();
+		int i = 0;
+		for(HistoryIndex index : list)
+		{
+			if(i < history.amount)
+			{
+				model.setValueAt(index.getType(), i, 0);
+				model.setValueAt(index.getTradeID(), i, 1);
+				model.setValueAt(index.getAmount(), i, 2);
+				model.setValueAt(index.getPrice(), i, 3);
+			}
+			i++;
+		}
+		historyTable.setModel(model);
 	}
 	
 	private void initialize()
@@ -117,6 +170,7 @@ public class Window
 			public void actionPerformed(ActionEvent arg0)
 			{
 				Bitcoin.setCex(name.getText(), api_key.getText(), api_secret.getText());
+				printToConsole("Updated CEX.io settings to " + name.getText() + ", " + api_key.getText() + " (" + api_secret.getText() + ")");
 			}
 			
 		});
@@ -124,6 +178,61 @@ public class Window
 		
 		JPanel panel = new JPanel();
 		tabbedPane.addTab("Console", null, panel, null);
+		panel.setLayout(null);
+		
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(10, 11, 419, 262);
+		panel.add(scrollPane);
+		
+		consoleList = new JList(new DefaultListModel());
+		scrollPane.setViewportView(consoleList);
+		
+		JPanel panel_2 = new JPanel();
+		tabbedPane.addTab("History", null, panel_2, null);
+		panel_2.setLayout(null);
+		
+		JScrollPane scrollPane_1 = new JScrollPane();
+		scrollPane_1.setBounds(10, 11, 419, 236);
+		panel_2.add(scrollPane_1);
+		
+		historyTable = new JTable();
+		historyTable.setColumnSelectionAllowed(true);
+		historyTable.setCellSelectionEnabled(true);
+		historyTable.setModel(new DefaultTableModel(5, 4));
+		scrollPane_1.setViewportView(historyTable);
+		
+		JLabel label_Amount = new JLabel("Amount:");
+		label_Amount.setHorizontalAlignment(SwingConstants.RIGHT);
+		label_Amount.setBounds(173, 259, 46, 14);
+		panel_2.add(label_Amount);
+		
+		amount = new JSlider();
+		amount.setMaximum(200);
+		amount.setMinimum(5);
+		amount.setValue(50);
+		amount.addChangeListener(new ChangeListener()
+		{
+			@Override
+			public void stateChanged(ChangeEvent arg0)
+			{
+				history.amount = amount.getValue();
+				populateHistory();
+			}
+		});
+		amount.setBounds(229, 258, 200, 15);
+		panel_2.add(amount);
+		
+		JButton historyRefresh = new JButton("Refresh");
+		historyRefresh.setBounds(10, 255, 153, 23);
+		historyRefresh.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				populateHistory();
+			}
+		});
+		panel_2.add(historyRefresh);
 		
 		JLabel Label_price = new JLabel("BTC Price (USD):");
 		Label_price.setFont(new Font("Tahoma", Font.PLAIN, 15));

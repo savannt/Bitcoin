@@ -1,4 +1,4 @@
-package me.savant.bitcoin;
+package me.savant.bitcoin.cex;
 
 public class PriceFinder
 {
