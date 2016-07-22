@@ -25,6 +25,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 
 import me.savant.bitcoin.Bitcoin;
+import me.savant.bitcoin.cex.Balance;
 import me.savant.bitcoin.cex.CexAPI;
 import me.savant.bitcoin.cex.History;
 import me.savant.bitcoin.cex.HistoryIndex;
@@ -32,8 +33,8 @@ import me.savant.bitcoin.cex.HistoryIndex;
 public class Window
 {
 	private JFrame frame;
-	
 	private History history;
+	private Balance balance;
 	
 	public Window(CexAPI cex)
 	{
@@ -41,6 +42,17 @@ public class Window
 		history = new History(cex);
 		populateHistory();
 		printToConsole("Started!");
+		
+		balance = new Balance(cex);
+		Thread thread = new Thread(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				updateBalance();
+			}
+		});
+		thread.start();
 	}
 	
 	public void printToConsole(String text)
@@ -68,6 +80,27 @@ public class Window
 	private JList consoleList;
 	private JTable historyTable;
 	private JSlider amount;
+	private JLabel usd;
+	private JLabel btc;
+	
+	void updateBalance()
+	{
+		float usd = balance.getUSDBalance();
+		float btc = balance.getBTCBalance();
+		
+		this.usd.setText(usd + "$");
+		this.btc.setText(btc + "BTC");
+		
+		try
+		{
+			Thread.sleep(250);
+		}
+		catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
+		updateBalance();
+	}
 	
 	
 	public void updatePrice(float price, float priceYesterday, String difference, float cex_price, float volatility)
@@ -95,7 +128,15 @@ public class Window
 	
 	private void populateHistory()
 	{
-		historyTable.setModel(new DefaultTableModel(history.amount, 5));
+		historyTable.setModel(new DefaultTableModel(history.amount, 5)
+		{
+			String[] columnNames = new String[] { "Date", "Type", "ID", "BTC Amount", "USD Price" };
+		    @Override
+		    public String getColumnName(int index)
+		    {
+		        return columnNames[index];
+		    }
+		});
 		DefaultTableModel model = (DefaultTableModel) historyTable.getModel();
 		List<HistoryIndex> list = history.fetchHistory();
 		int i = 0;
@@ -123,7 +164,7 @@ public class Window
 		frame.getContentPane().setLayout(null);
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		tabbedPane.setBounds(0, 49, 444, 312);
+		tabbedPane.setBounds(0, 49, 444, 295);
 		frame.getContentPane().add(tabbedPane);
 		
 		JPanel panel_1 = new JPanel();
@@ -217,7 +258,6 @@ public class Window
 			public void stateChanged(ChangeEvent arg0)
 			{
 				history.amount = amount.getValue();
-				populateHistory();
 			}
 		});
 		amount.setBounds(229, 258, 200, 15);
@@ -305,5 +345,21 @@ public class Window
 		volatility.setFont(new Font("Tahoma", Font.PLAIN, 12));
 		volatility.setBounds(223, 35, 46, 14);
 		frame.getContentPane().add(volatility);
+		
+		JLabel Label_USD = new JLabel("USD:");
+		Label_USD.setBounds(10, 346, 29, 14);
+		frame.getContentPane().add(Label_USD);
+		
+		usd = new JLabel("456.420$");
+		usd.setBounds(49, 346, 55, 14);
+		frame.getContentPane().add(usd);
+		
+		btc = new JLabel("0.0754BTC");
+		btc.setBounds(181, 346, 98, 14);
+		frame.getContentPane().add(btc);
+		
+		JLabel lblBtc = new JLabel("BTC:");
+		lblBtc.setBounds(142, 346, 29, 14);
+		frame.getContentPane().add(lblBtc);
 	}
 }

@@ -37,12 +37,21 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-public class CexAPI {
-  protected final String username;
-  protected final String apiKey;
-  protected final String apiSecret;
+public class CexAPI
+{
+  public String username;
+  public String apiKey;
+  public String apiSecret;
   protected int nonce;
-
+  
+  public void updateSettings(String user, String key, String secret)
+  {
+	    this.username = user;
+	    this.apiKey = key;
+	    this.apiSecret = secret;
+	    this.nonce = Integer.valueOf((int) (System.currentTimeMillis() / 1000));
+  }
+  
   /**
    * Creates a CexAPI Object.
    * 
@@ -53,13 +62,22 @@ public class CexAPI {
    * @param secret
    * Cex.io API Secret
    */
-  public CexAPI(String user, String key, String secret) {
+  public CexAPI(String user, String key, String secret)
+  {
     this.username = user;
     this.apiKey = key;
     this.apiSecret = secret;
     this.nonce = Integer.valueOf((int) (System.currentTimeMillis() / 1000));
   }
-
+  
+  
+  public boolean isConnected()
+  {
+	  if(apiKey.equalsIgnoreCase("") || apiSecret.equalsIgnoreCase("") || username.equalsIgnoreCase(""))
+		  return false;
+	  return true;
+  }
+  
   /**
    * Debug the contents of the a CexAPI Object.
    * 
