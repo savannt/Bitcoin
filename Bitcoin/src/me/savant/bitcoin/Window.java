@@ -78,39 +78,39 @@ public class Window
 		
 		JLabel label_name = new JLabel("CEX.IO Name:");
 		label_name.setHorizontalAlignment(SwingConstants.RIGHT);
-		label_name.setBounds(10, 11, 123, 14);
+		label_name.setBounds(61, 11, 123, 14);
 		panel_1.add(label_name);
 		
 		JLabel label_api_key = new JLabel("CEX.IO API Key:");
 		label_api_key.setHorizontalAlignment(SwingConstants.RIGHT);
-		label_api_key.setBounds(10, 36, 123, 14);
+		label_api_key.setBounds(61, 36, 123, 14);
 		panel_1.add(label_api_key);
 		
 		JLabel label_api_secret = new JLabel("CEX.IO API Secret:");
 		label_api_secret.setHorizontalAlignment(SwingConstants.RIGHT);
-		label_api_secret.setBounds(10, 61, 123, 14);
+		label_api_secret.setBounds(61, 61, 123, 14);
 		panel_1.add(label_api_secret);
 		
 		name = new JTextField();
 		name.setText("up102956815");
-		name.setBounds(145, 11, 170, 20);
+		name.setBounds(196, 11, 170, 20);
 		panel_1.add(name);
 		name.setColumns(10);
 		
 		api_key = new JTextField();
 		api_key.setText("GDAdyYllI0NJgLsEqD1r6egAgZc");
 		api_key.setColumns(10);
-		api_key.setBounds(145, 36, 170, 20);
+		api_key.setBounds(196, 36, 170, 20);
 		panel_1.add(api_key);
 		
 		api_secret = new JTextField();
 		api_secret.setText("zGG9AXEgM85Dc3zjhvBqiAHj78");
 		api_secret.setColumns(10);
-		api_secret.setBounds(145, 61, 170, 20);
+		api_secret.setBounds(196, 61, 170, 20);
 		panel_1.add(api_secret);
 		
 		JButton button_UpdateSettings = new JButton("Update Settings");
-		button_UpdateSettings.setBounds(40, 86, 275, 23);
+		button_UpdateSettings.setBounds(91, 86, 275, 23);
 		button_UpdateSettings.addActionListener(new ActionListener()
 		{
 			@Override

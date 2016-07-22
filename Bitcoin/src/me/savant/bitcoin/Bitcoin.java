@@ -15,9 +15,9 @@ public class Bitcoin
 	
 	public static void main(String[] args)
 	{
-		Window window = new Window();
+		UIManager manager = new UIManager();
 		cex = new CexAPI("", "", "");
-		price = new BTCStats(window, cex);
+		price = new BTCStats(manager, cex);
 	}
 	
 	public static void setCex(String name, String apiKey, String apiSecret)

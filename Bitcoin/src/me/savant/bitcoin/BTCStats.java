@@ -26,12 +26,12 @@ public class BTCStats
 	private float volatility;
 	private String difference = "";
 	
-	private Window window;
+	private UIManager manager;
 	private CexAPI cex;
 	
-	public BTCStats(Window window, CexAPI cex)
+	public BTCStats(UIManager manager, CexAPI cex)
 	{
-		this.window = window;
+		this.manager = manager;
 		this.cex = cex;
 		Thread thread = new Thread(new Runnable()
 		{
@@ -47,13 +47,20 @@ public class BTCStats
 	void update()
 	{
 		price = getPrice();
+		manager.progress();
 		yesterdaysPrice = getYesterdaysPrice();
+		manager.progress();
 		difference = getDifference();
+		manager.progress();
 		volatility = getVolatility();
+		manager.progress();
 		cex_price = getExactPrice();
+		manager.progress();
 		
-		window.updatePrice(price, yesterdaysPrice, difference, cex_price, volatility);
-		window.setVisible(true);
+		manager.getWindow().updatePrice(price, yesterdaysPrice, difference, cex_price, volatility);
+		if(manager.isLoading())
+			manager.doneLoading();
+
 		
 		System.out.println("[BTCPrice - USD] CoinDesk Price: " + price + " Yesterday's CoinDesk Price: " + yesterdaysPrice + " CoinDesk Difference: " + difference + " CEX.io Price: " + cex_price + " btcvol.info Volatility: " + volatility);
 		
