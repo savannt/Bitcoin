@@ -2,7 +2,7 @@ package me.savant.bitcoin.cex;
 
 public class Fee
 {
-	static float CEXIO_FEE = 0.2f;
+	public static float CEXIO_FEE = 0.02f;
 	
 	public static float getFee(float btcAmount)
 	{

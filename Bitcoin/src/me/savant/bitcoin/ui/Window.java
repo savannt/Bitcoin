@@ -5,7 +5,6 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -28,6 +27,7 @@ import javax.swing.table.DefaultTableModel;
 import me.savant.bitcoin.Bitcoin;
 import me.savant.bitcoin.cex.Balance;
 import me.savant.bitcoin.cex.CexAPI;
+import me.savant.bitcoin.cex.Fee;
 import me.savant.bitcoin.cex.History;
 import me.savant.bitcoin.cex.HistoryIndex;
 import me.savant.bitcoin.cex.OrderIndex;
@@ -95,6 +95,11 @@ public class Window
 	private JLabel connectionStatus;
 	private JButton btnConnect;
 	private JTable orders;
+	private JTextField fee;
+	private JTextField profitRange;
+	private JTextField holdingAmount;
+	private JLabel prediction;
+	
 	
 	void updateBalance()
 	{
@@ -113,17 +118,21 @@ public class Window
 			e.printStackTrace();
 		}
 		updateBalance();
+		updatePredictionLabel();
 	}
 	
+	float exactPrice = 0f;
 	
 	public void updatePrice(float price, float priceYesterday, String difference, float cex_price, float volatility)
 	{
+		exactPrice = cex_price;
+
 		this.price.setText(price + "");
 		this.priceYestrday.setText(priceYesterday + "");
 		this.cex_price.setText(cex_price + "");
 		this.volatility.setText(volatility + "%");
 		this.difference.setText(difference);
-		
+				
 		float discrepancy = 0f;
 		if(price > cex_price)
 		{
@@ -194,6 +203,22 @@ public class Window
 		}
 		orders.setModel(model);
 		printToConsole("Refreshed Orders List!");
+	}
+	
+	private void updatePredictionLabel()
+	{
+		//Fee, ProfitRange, HoldingAmount
+		float usd = Float.parseFloat(holdingAmount.getText()); //How much USD we have to trade for BTC
+		float btc = format(4, (usd - Fee.getFee(usd)) / exactPrice); //How much BTC could we buy for our USD
+		
+		float range = Float.parseFloat(profitRange.getText()); //How far apart should our buy & sell price be
+		range += Fee.getFee(usd); //Adds in the fee for how much we are trading
+		float buyPrice = exactPrice - range; //Price we are buying at
+		float sellPrice = exactPrice + range; //Price we are selling at
+		
+		float profit = sellPrice - buyPrice; //Predicted profit from a instant cycle
+		
+		prediction.setText("<html>Buying " + btc + "BTC for " + usd + "$<br> at " + buyPrice + "$<br>" + "Selling at " + sellPrice + "$<br>for " + profit + "$</html>");
 	}
 	
 	private void initialize()
@@ -361,6 +386,77 @@ public class Window
 		});
 		panel_3.add(refreshOrders);
 		
+		JPanel panel_4 = new JPanel();
+		tabbedPane.addTab("Trading", null, panel_4, null);
+		panel_4.setLayout(null);
+		
+		JLabel Label_fee = new JLabel("Fee: ");
+		Label_fee.setHorizontalAlignment(SwingConstants.RIGHT);
+		Label_fee.setBounds(23, 14, 119, 14);
+		panel_4.add(Label_fee);
+		
+		fee = new JTextField();
+		fee.setText("0.02");
+		fee.setBounds(152, 11, 86, 20);
+		fee.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				Fee.CEXIO_FEE = Float.parseFloat(fee.getText());
+				updatePredictionLabel();
+			}
+		});
+		panel_4.add(fee);
+		fee.setColumns(10);
+		
+		JLabel Label_profitRange = new JLabel("Profit Range:");
+		Label_profitRange.setHorizontalAlignment(SwingConstants.RIGHT);
+		Label_profitRange.setBounds(23, 39, 119, 14);
+		panel_4.add(Label_profitRange);
+		
+		profitRange = new JTextField();
+		profitRange.setText("0.5");
+		profitRange.setBounds(152, 36, 86, 20);
+		panel_4.add(profitRange);
+		profitRange.setColumns(10);
+		
+		JLabel lblHoldingAmountusd = new JLabel("Holding Amount (USD):");
+		lblHoldingAmountusd.setHorizontalAlignment(SwingConstants.RIGHT);
+		lblHoldingAmountusd.setBounds(23, 64, 119, 14);
+		panel_4.add(lblHoldingAmountusd);
+		
+		holdingAmount = new JTextField();
+		holdingAmount.setText("250");
+		holdingAmount.setBounds(152, 61, 86, 20);
+		panel_4.add(holdingAmount);
+		holdingAmount.setColumns(10);
+		
+		JButton executeCycle = new JButton("Execute 1 Cycle");
+		executeCycle.setBounds(33, 89, 205, 23);
+		panel_4.add(executeCycle);
+		
+		JLabel Label_prediction = new JLabel("Prediction:");
+		Label_prediction.setBounds(248, 11, 79, 14);
+		panel_4.add(Label_prediction);
+		
+		prediction = new JLabel("example");
+		prediction.setVerticalAlignment(SwingConstants.TOP);
+		prediction.setBounds(248, 27, 181, 90);
+		panel_4.add(prediction);
+		
+		JButton btnGeneratePrediction = new JButton("Generate Prediction");
+		btnGeneratePrediction.setBounds(248, 89, 179, 23);
+		btnGeneratePrediction.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				updatePredictionLabel();
+			}
+		});
+		panel_4.add(btnGeneratePrediction);
+		
 		JLabel Label_price = new JLabel("BTC Price (USD):");
 		Label_price.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		Label_price.setBounds(10, 9, 119, 29);
@@ -453,5 +549,10 @@ public class Window
 		connectionStatus.setHorizontalAlignment(SwingConstants.RIGHT);
 		connectionStatus.setBounds(295, 369, 149, 14);
 		frame.getContentPane().add(connectionStatus);
+	}
+	
+	private float format(int places, float value)
+	{
+		return Float.parseFloat(String.format("%." + places + "f", value));
 	}
 }
