@@ -9,7 +9,7 @@ import com.google.gson.JsonParser;
 
 public class History
 {
-	public int amount = 5;
+	public int amount = 25;
 	CexAPI cex;
 	public History(CexAPI cex)
 	{
@@ -19,7 +19,8 @@ public class History
 	public List<HistoryIndex> fetchHistory()
 	{
 		List<HistoryIndex> list = new ArrayList<HistoryIndex>();
-		String json = cex.tradeHistory("BTC/USD", 1000);
+		String json = cex.tradeHistory("BTC/USD", 0);
+		
 		JsonParser jp = new JsonParser();
 		JsonElement root = jp.parse(json);
 		JsonArray array = root.getAsJsonArray();
@@ -39,7 +40,8 @@ public class History
 			}
 			float amount = element.getAsJsonObject().get("amount").getAsFloat();
 			float price = element.getAsJsonObject().get("price").getAsFloat();
-			list.add(new HistoryIndex(tradeID, type, amount, price));
+			int date = element.getAsJsonObject().get("date").getAsInt();
+			list.add(new HistoryIndex(tradeID, type, amount, price, date));
 		}
 		return list;
 	}

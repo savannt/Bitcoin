@@ -6,13 +6,15 @@ public class HistoryIndex
 	private OrderType type;
 	private float amount;
 	private float price;
-
-	public HistoryIndex(int tradeID, OrderType type, float amount, float price)
+	private int date;
+	
+	public HistoryIndex(int tradeID, OrderType type, float amount, float price, int date)
 	{
 		this.tradeID = tradeID;
 		this.type = type;
 		this.amount = amount;
 		this.price = price;
+		this.date = date;
 	}
 	
 	public int getTradeID()
@@ -33,5 +35,10 @@ public class HistoryIndex
 	public float getPrice()
 	{
 		return price;
-	}	
+	}
+	
+	public int getDate()
+	{
+		return date;
+	}
 }

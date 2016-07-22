@@ -95,7 +95,7 @@ public class Window
 	
 	private void populateHistory()
 	{
-		historyTable.setModel(new DefaultTableModel(history.amount, 4));
+		historyTable.setModel(new DefaultTableModel(history.amount, 5));
 		DefaultTableModel model = (DefaultTableModel) historyTable.getModel();
 		List<HistoryIndex> list = history.fetchHistory();
 		int i = 0;
@@ -103,10 +103,11 @@ public class Window
 		{
 			if(i < history.amount)
 			{
-				model.setValueAt(index.getType(), i, 0);
-				model.setValueAt(index.getTradeID(), i, 1);
-				model.setValueAt(index.getAmount(), i, 2);
-				model.setValueAt(index.getPrice(), i, 3);
+				model.setValueAt(index.getDate(), i, 0);
+				model.setValueAt(index.getType(), i, 1);
+				model.setValueAt(index.getTradeID(), i, 2);
+				model.setValueAt(index.getAmount(), i, 3);
+				model.setValueAt(index.getPrice(), i, 4);
 			}
 			i++;
 		}
@@ -198,7 +199,7 @@ public class Window
 		historyTable = new JTable();
 		historyTable.setColumnSelectionAllowed(true);
 		historyTable.setCellSelectionEnabled(true);
-		historyTable.setModel(new DefaultTableModel(5, 4));
+		historyTable.setModel(new DefaultTableModel(5, 5));
 		scrollPane_1.setViewportView(historyTable);
 		
 		JLabel label_Amount = new JLabel("Amount:");
