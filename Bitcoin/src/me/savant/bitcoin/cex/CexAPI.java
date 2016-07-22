@@ -52,6 +52,14 @@ public class CexAPI
 	    this.nonce = Integer.valueOf((int) (System.currentTimeMillis() / 1000));
   }
   
+  public void disconnect()
+  {
+	  username = "";
+	  apiKey = "";
+	  apiSecret = "";
+	  nonce = 0;
+  }
+  
   /**
    * Creates a CexAPI Object.
    * 
@@ -202,7 +210,6 @@ public class CexAPI
         }
       }
     }
-
     return response;
   }
 
@@ -220,8 +227,18 @@ public class CexAPI
    * 
    * @return Result from POST sent to server.
    */
-  private String apiCall(String method, String pair, String param, boolean auth) {
-    return this.post(("https://cex.io/api/" + method + "/" + pair), param, auth);
+  private String apiCall(String method, String pair, String param, boolean auth)
+  {
+	  if(auth && !this.isConnected())
+	  {
+		  return "";
+	  }
+	  String post = this.post(("https://cex.io/api/" + method + "/" + pair), param, auth);
+	  while(JsonUtils.isNotCorrect(post))
+	  {
+		  post = this.post(("https://cex.io/api/" + method + "/" + pair), param, auth);
+	  }
+	  return post;
   }
 
   /**

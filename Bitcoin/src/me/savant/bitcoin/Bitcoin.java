@@ -1,6 +1,5 @@
 package me.savant.bitcoin;
 
-import me.savant.bitcoin.cex.Balance;
 import me.savant.bitcoin.cex.CexAPI;
 import me.savant.bitcoin.ui.UIManager;
 
@@ -21,7 +20,7 @@ public class Bitcoin
 	
 	public static void main(String[] args)
 	{
-		cex = new CexAPI("up102956815", "GDAdyYllI0NJgLsEqD1r6egAgZc", "zGG9AXEgM85Dc3zjhvBqiAHj78");
+		cex = new CexAPI("", "", "");
 		UIManager manager = new UIManager(cex);
 		price = new BTCStats(manager, cex);
 	}

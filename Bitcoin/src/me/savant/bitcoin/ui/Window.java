@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -29,21 +30,30 @@ import me.savant.bitcoin.cex.Balance;
 import me.savant.bitcoin.cex.CexAPI;
 import me.savant.bitcoin.cex.History;
 import me.savant.bitcoin.cex.HistoryIndex;
+import me.savant.bitcoin.cex.OrderIndex;
+import me.savant.bitcoin.cex.OrderManager;
 
 public class Window
 {
 	private JFrame frame;
 	private History history;
+	private OrderManager orderManager;
 	private Balance balance;
+	private CexAPI cex;
 	
 	public Window(CexAPI cex)
 	{
 		initialize();
-		history = new History(cex);
-		populateHistory();
+		this.cex = cex;
 		printToConsole("Started!");
 		
+		history = new History(cex);
 		balance = new Balance(cex);
+		orderManager = new OrderManager(cex);
+		
+		populateHistory();
+		refreshOrders();
+		
 		Thread thread = new Thread(new Runnable()
 		{
 			@Override
@@ -82,11 +92,14 @@ public class Window
 	private JSlider amount;
 	private JLabel usd;
 	private JLabel btc;
+	private JLabel connectionStatus;
+	private JButton btnConnect;
+	private JTable orders;
 	
 	void updateBalance()
 	{
-		float usd = balance.getUSDBalance();
-		float btc = balance.getBTCBalance();
+		float usd = balance.getBalance("USD");
+		float btc = balance.getBalance("BTC");
 		
 		this.usd.setText(usd + "$");
 		this.btc.setText(btc + "BTC");
@@ -155,68 +168,116 @@ public class Window
 		historyTable.setModel(model);
 	}
 	
+	private void refreshOrders()
+	{
+		orders.setModel(new DefaultTableModel(orderManager.minimumSize, 6)
+		{
+			String[] columnNames = new String[] { "Date", "Type", "ID", "BTC Amount", "USD Price", "Pending"};
+		    @Override
+		    public String getColumnName(int index)
+		    {
+		        return columnNames[index];
+		    }
+		});
+		DefaultTableModel model = (DefaultTableModel) orders.getModel();
+		List<OrderIndex> list = orderManager.fetchOrders();
+		int i = 0;
+		for(OrderIndex index : list)
+		{
+			model.setValueAt(index.getDate(), i, 0);
+			model.setValueAt(index.getType(), i, 1);
+			model.setValueAt(index.getTradeID(), i, 2);
+			model.setValueAt(index.getAmount(), i, 3);
+			model.setValueAt(index.getPrice(), i, 4);
+			model.setValueAt(index.getPending(), i, 5);
+			i++;
+		}
+		orders.setModel(model);
+		printToConsole("Refreshed Orders List!");
+	}
+	
 	private void initialize()
 	{
 		frame = new JFrame();
-		frame.setBounds(100, 100, 460, 400);
+		frame.setBounds(100, 100, 460, 423);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setResizable(false);
 		frame.getContentPane().setLayout(null);
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		tabbedPane.setBounds(0, 49, 444, 295);
+		tabbedPane.setBounds(0, 49, 444, 314);
 		frame.getContentPane().add(tabbedPane);
 		
 		JPanel panel_1 = new JPanel();
-		tabbedPane.addTab("Settings", null, panel_1, null);
+		tabbedPane.addTab("CEX.IO Settings", null, panel_1, null);
 		panel_1.setLayout(null);
 		
 		JLabel label_name = new JLabel("CEX.IO Name:");
 		label_name.setHorizontalAlignment(SwingConstants.RIGHT);
-		label_name.setBounds(61, 11, 123, 14);
+		label_name.setBounds(62, 101, 123, 14);
 		panel_1.add(label_name);
 		
 		JLabel label_api_key = new JLabel("CEX.IO API Key:");
 		label_api_key.setHorizontalAlignment(SwingConstants.RIGHT);
-		label_api_key.setBounds(61, 36, 123, 14);
+		label_api_key.setBounds(62, 126, 123, 14);
 		panel_1.add(label_api_key);
 		
 		JLabel label_api_secret = new JLabel("CEX.IO API Secret:");
 		label_api_secret.setHorizontalAlignment(SwingConstants.RIGHT);
-		label_api_secret.setBounds(61, 61, 123, 14);
+		label_api_secret.setBounds(62, 151, 123, 14);
 		panel_1.add(label_api_secret);
 		
 		name = new JTextField();
 		name.setText("up102956815");
-		name.setBounds(196, 11, 170, 20);
+		name.setBounds(197, 101, 170, 20);
 		panel_1.add(name);
 		name.setColumns(10);
 		
 		api_key = new JTextField();
 		api_key.setText("GDAdyYllI0NJgLsEqD1r6egAgZc");
 		api_key.setColumns(10);
-		api_key.setBounds(196, 36, 170, 20);
+		api_key.setBounds(197, 126, 170, 20);
 		panel_1.add(api_key);
 		
 		api_secret = new JTextField();
 		api_secret.setText("zGG9AXEgM85Dc3zjhvBqiAHj78");
 		api_secret.setColumns(10);
-		api_secret.setBounds(196, 61, 170, 20);
+		api_secret.setBounds(197, 151, 170, 20);
 		panel_1.add(api_secret);
 		
-		JButton button_UpdateSettings = new JButton("Update Settings");
-		button_UpdateSettings.setBounds(91, 86, 275, 23);
-		button_UpdateSettings.addActionListener(new ActionListener()
+		btnConnect = new JButton("Connect");
+		btnConnect.setBounds(92, 176, 275, 23);
+		btnConnect.addActionListener(new ActionListener()
 		{
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				Bitcoin.setCex(name.getText(), api_key.getText(), api_secret.getText());
-				printToConsole("Updated CEX.io settings to " + name.getText() + ", " + api_key.getText() + " (" + api_secret.getText() + ")");
+				if(btnConnect.getText() == "Connect")
+				{
+					Bitcoin.setCex(name.getText(), api_key.getText(), api_secret.getText());
+					printToConsole("Updated CEX.io settings to " + name.getText() + ", " + api_key.getText() + " (" + api_secret.getText() + ")");
+					printToConsole("Connected to CEX.io!");
+					connectionStatus.setText("Connected!");
+					connectionStatus.setForeground(Color.GREEN);
+					btnConnect.setText("Disconnect");
+				}
+				else
+				{
+					cex.disconnect();
+					printToConsole("Disconnected from CEX.io...");
+					connectionStatus.setText("Disconnected.");
+					connectionStatus.setForeground(Color.RED);
+					btnConnect.setText("Connect");
+				}
 			}
-			
 		});
-		panel_1.add(button_UpdateSettings);
+		panel_1.add(btnConnect);
+		
+		JLabel lblCexioApiOptions = new JLabel("CEX.IO API Options");
+		lblCexioApiOptions.setFont(new Font("Tw Cen MT Condensed Extra Bold", Font.PLAIN, 26));
+		lblCexioApiOptions.setHorizontalAlignment(SwingConstants.CENTER);
+		lblCexioApiOptions.setBounds(113, 43, 247, 61);
+		panel_1.add(lblCexioApiOptions);
 		
 		JPanel panel = new JPanel();
 		tabbedPane.addTab("Console", null, panel, null);
@@ -274,6 +335,31 @@ public class Window
 			}
 		});
 		panel_2.add(historyRefresh);
+		
+		JPanel panel_3 = new JPanel();
+		tabbedPane.addTab("My Orders", null, panel_3, null);
+		panel_3.setLayout(null);
+		
+		JScrollPane scrollPane_2 = new JScrollPane();
+		scrollPane_2.setBounds(10, 11, 419, 230);
+		panel_3.add(scrollPane_2);
+		
+		orders = new JTable();
+		orders.setCellSelectionEnabled(true);
+		orders.setColumnSelectionAllowed(true);
+		scrollPane_2.setViewportView(orders);
+		
+		JButton refreshOrders = new JButton("Refresh");
+		refreshOrders.setBounds(10, 252, 128, 23);
+		refreshOrders.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				refreshOrders();
+			}
+		});
+		panel_3.add(refreshOrders);
 		
 		JLabel Label_price = new JLabel("BTC Price (USD):");
 		Label_price.setFont(new Font("Tahoma", Font.PLAIN, 15));
@@ -347,19 +433,25 @@ public class Window
 		frame.getContentPane().add(volatility);
 		
 		JLabel Label_USD = new JLabel("USD:");
-		Label_USD.setBounds(10, 346, 29, 14);
+		Label_USD.setBounds(10, 369, 29, 14);
 		frame.getContentPane().add(Label_USD);
 		
 		usd = new JLabel("456.420$");
-		usd.setBounds(49, 346, 55, 14);
+		usd.setBounds(49, 369, 55, 14);
 		frame.getContentPane().add(usd);
 		
 		btc = new JLabel("0.0754BTC");
-		btc.setBounds(181, 346, 98, 14);
+		btc.setBounds(181, 369, 98, 14);
 		frame.getContentPane().add(btc);
 		
 		JLabel lblBtc = new JLabel("BTC:");
-		lblBtc.setBounds(142, 346, 29, 14);
+		lblBtc.setBounds(142, 369, 29, 14);
 		frame.getContentPane().add(lblBtc);
+		
+		connectionStatus = new JLabel("Disconnected.");
+		connectionStatus.setForeground(Color.RED);
+		connectionStatus.setHorizontalAlignment(SwingConstants.RIGHT);
+		connectionStatus.setBounds(295, 369, 149, 14);
+		frame.getContentPane().add(connectionStatus);
 	}
 }

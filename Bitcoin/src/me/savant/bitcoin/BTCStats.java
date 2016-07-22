@@ -99,7 +99,9 @@ public class BTCStats
 			WebResponse response = page.getWebResponse();
 			JsonParser jp = new JsonParser();
 			JsonElement root = jp.parse(response.getContentAsString());
-			return (float)roundFloat(root.getAsJsonObject().get("Volatility").getAsFloat());
+			float f = (float)roundFloat(root.getAsJsonObject().get("Volatility").getAsFloat());
+			wc.close();
+			return f;
 		}
 		catch (Exception e)
 		{
